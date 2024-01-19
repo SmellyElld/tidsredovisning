@@ -184,9 +184,99 @@ function test_UppdateraAktivitet(): string {
     $retur = "<h2>test_UppdateraAktivitet</h2>";
 
     try {
-        $retur .= "<p class='error'>Inga tester implementerade</p>";
+        //Koppla databasen
+        $db = connectDb();
+        //Starta transaktion
+        $db -> beginTransaction();
+
+        //Misslyckas med att uppdatera id = -1
+        $svar = uppdateraAktivitet("-1", "Aktivitet");
+        if($svar -> getStatus() === 400){
+            $retur .= "<p class='ok'>Uppdatera aktivitet med id = -1 misslyckades, som förväntat</p>";
+        } else {
+            $retur .= "<p class='error'>Uppdaterad aktivitet med id = -1 lyckades, status " .  $svar -> getStatus() . " istället för förväntad 400</p>";
+        }
+
+        //Misslyckas med att uppdatera id = 0
+        $svar = uppdateraAktivitet("0", "Aktivitet");
+        if($svar -> getStatus() === 400){
+            $retur .= "<p class='ok'>Uppdatera aktivitet med id = 0 misslyckades, som förväntat</p>";
+        } else {
+            $retur .= "<p class='error'>Uppdatera aktivitet med id = 0 lyckades, status " .  $svar -> getStatus() . " istället för förväntad 400</p>";
+        }
+
+        //Misslyckas med att uppdatera id = 3.14
+        $svar = uppdateraAktivitet("3.14", "Aktivitet");
+        if($svar -> getStatus() === 400){
+            $retur .= "<p class='ok'>Uppdatera aktivitet med id = 3.14 misslyckades, som förväntat</p>";
+        } else {
+            $retur .= "<p class='error'>Uppdatera aktivitet med id = 3.14 lyckades, status " .  $svar -> getStatus() . " istället för förväntad 400</p>";
+        }
+
+        //Misslyckas med att uppdatera aktivitet = ""
+        $nyAktivitet = "Aktivitet" . time();
+        $giltigtId = sparaNyAktivitet($nyAktivitet);
+        if($giltigtId -> getStatus() === 200){
+            $giltigtId = $giltigtId -> getContent() -> id;
+        } else {
+            throw new Exception("Kunde inte skapa ny post för kontroll");
+        }
+
+        $svar = uppdateraAktivitet("$giltigtId", "");
+        if($svar -> getStatus() === 400){
+            $retur .= "<p class='ok'>Uppdatera aktivitet med aktivitet = '' misslyckades, som förväntat</p>";
+        } else {
+            $retur .= "<p class='error'>Uppdatera aktivitet med aktivitet = '' lyckades, status " .  $svar -> getStatus() . " istället för förväntad 400</p>";
+        }
+
+        //Lyckas med att uppdatera aktivitet
+        $svar = uppdateraAktivitet("$giltigtId", "$nyAktivitet");
+        if($svar -> getStatus() === 200){
+            $retur .= "<p class='ok'>Uppdatera aktivitet lyckades</p>";
+        } else {
+            $retur .= "<p class='error'>Uppdatera aktivitet misslyckades, status " .  $svar -> getStatus() . " istället för förväntad 200</p>";
+        }
+
+        //Uppdatera med samma information misslyckas
+        $svar = uppdateraAktivitet("$giltigtId", "$nyAktivitet");
+        if($svar -> getStatus() === 200 && $svar -> getContent() -> result === false){
+            $retur .= "<p class='ok'>Uppdatera aktivitet med samma innehåll misslyckades, som förväntat</p>";
+        } else {
+            $retur .= "<p class='error'>Uppdaterad aktivitet med samma innehåll lyckades, status " .  $svar -> getStatus() . " med informationen: <br>" . print_r($svar -> getContent(), true) . "</p>";
+        }
+    
+        //Misslyckas med att updatera aktivitet med en aktivitet som redan finns
+        $nyAktivitet2 = "Aktivitet2" . time();
+        $giltigtId2 = sparaNyAktivitet($nyAktivitet2);
+        if($giltigtId2 -> getStatus() === 200){
+            $giltigtId2 = $giltigtId2 -> getContent() -> id;
+        } else {
+            throw new Exception("Kunde inte skapa ny post för kontroll");
+        }
+
+        $svar = uppdateraAktivitet("$giltigtId2", "$nyAktivitet");
+        if($svar -> getStatus() === 400){
+            $retur .= "<p class='ok'>Uppdatera aktivitet som redan finns misslyckades, som förväntat</p>";
+        } else {
+            $retur .= "<p class='error'>Uppdatera aktivitet som redan finns lyckades, status " .  $svar -> getStatus() . " istället för förväntad 400</p>";
+        }
+
+        //Misslyckas med att uppdatera aktivitet som inte finns
+        $giltigtId2 ++;
+        $svar = uppdateraAktivitet("$giltigtId2", "$nyAktivitet");
+        if($svar -> getStatus() === 200 && $svar -> getContent() -> result === false){
+            $retur .= "<p class='ok'>Uppdatera aktivitet som inte finns misslyckades, som förväntat</p>";
+        } else {
+            $retur .= "<p class='error'>Uppdatera aktivitet som inte finns lyckades, status:" .  $svar -> getStatus() . " med informationen: <br>" . print_r($svar -> getContent(), true) . "</p>";
+        }
+
     } catch (Exception $ex) {
         $retur .= "<p class='error'>Något gick fel, meddelandet säger:<br> {$ex->getMessage()}</p>";
+    } finally {
+        //Återställ databasen
+        if($db) {
+            $db -> rollBack();
+        }
     }
 
     return $retur;
