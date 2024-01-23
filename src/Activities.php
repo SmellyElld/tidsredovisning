@@ -25,7 +25,7 @@ function activities(Route $route, array $postData): Response {
             return uppdateraAktivitet( $route->getParams()[0],  $postData["activity"]);
         }
         if (count($route->getParams()) === 1 && $route->getMethod() === RequestMethod::DELETE) {
-            return raderaAktivetet($route->getParams()[0]);
+            return raderaAktivitet($route->getParams()[0]);
         }
     } catch (Exception $exc) {
         return new Response($exc->getMessage(), 400);
@@ -172,7 +172,7 @@ function uppdateraAktivitet(string $id, string $aktivitet): Response {
             $retur -> message = ["Uppdatera aktivitet misslyckades", "ingen rad uppdaterad"];
             return new Response($retur);
         }
-    } catch(Exception $e ) {
+    } catch(Exception $e) {
         $retur = new stdClass();
         $retur -> error = ["Bad request", "Något gick fel vid databasanropet", $e -> getMessage()];
         return new Response($retur, 400);
@@ -184,5 +184,36 @@ function uppdateraAktivitet(string $id, string $aktivitet): Response {
  * @param string $id Id för posten som ska raderas
  * @return Response
  */
-function raderaAktivetet(string $id): Response {
+function raderaAktivitet(string $id): Response {
+    //kontrollera indata
+    $kontrolleradId = filter_var($id, FILTER_VALIDATE_INT);
+    if ($kontrolleradId === false || $kontrolleradId < 1) {
+        $retur = new stdClass();
+        $retur -> error = ["Bad request", "Felaktigt angiven id"];
+        return new Response($retur, 400);
+    }
+    try {
+        //koppla databas
+        $db = connectDb();
+
+        //Exelvera SQL
+        $stmt = $db -> prepare("DELETE FROM aktiviteter WHERE id = :id");
+        $stmt -> execute(["id" => $kontrolleradId]);
+        
+        //Skicka svar
+        if ($stmt -> rowCount() === 1) {
+            $retur = new stdClass();
+            $retur -> result = true;
+            $retur -> message = ["Radera lyckades", "1 post raderades från databasen"];
+        } else {
+            $retur = new stdClass();
+            $retur -> result = false;
+            $retur -> message = ["Radera misslyckades", "ingen post raderades från databasen"];
+        }
+        return new Response($retur);
+    } catch (Exception $e) {
+        $retur = new stdClass();
+        $retur -> error = ["Bad request", "Något gick fel vid databasanropet", $e -> getMessage()];
+        return new Response($retur, 400);
+    }
 }

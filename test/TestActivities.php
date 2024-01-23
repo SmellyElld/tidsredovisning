@@ -289,10 +289,61 @@ function test_UppdateraAktivitet(): string {
 function test_RaderaAktivitet(): string {
     $retur = "<h2>test_RaderaAktivitet</h2>";
     try {
-        $retur .= "<p class='error'>Inga tester implementerade</p>";
+        //Testa felaktig id
+        $svar = raderaAktivitet("-1");
+        if($svar -> getStatus() === 400){
+            $retur .= "<p class='ok'>Radera aktivitet med felaktigt id (-1) misslyckades, som förväntat</p>";
+        } else {
+            $retur .= "<p class='error'>Radera aktivitet med felaktigt id (-1) lyckades, status " .  $svar -> getStatus() . " istället för förväntad 400</p>";
+        }
+
+        $svar = raderaAktivitet("0");
+        if($svar -> getStatus() === 400){
+            $retur .= "<p class='ok'>Radera aktivitet med felaktigt id (0) misslyckades, som förväntat</p>";
+        } else {
+            $retur .= "<p class='error'>Radera aktivitet med felaktigt id (0) lyckades, status " .  $svar -> getStatus() . " istället för förväntad 400</p>";
+        }
+
+        $svar = raderaAktivitet("3.14");
+        if($svar -> getStatus() === 400){
+            $retur .= "<p class='ok'>Radera aktivitet med felaktigt id (3.14) misslyckades, som förväntat</p>";
+        } else {
+            $retur .= "<p class='error'>Radera aktivitet med felaktigt id (3.14) lyckades, status " .  $svar -> getStatus() . " istället för förväntad 400</p>";
+        }
+
+
+        //Testa radera befintligt
+        $db = connectDb();
+        $db -> beginTransaction();
+
+        $nyAktivitet = "Aktivitet" . time();
+        $giltigtId = sparaNyAktivitet($nyAktivitet);
+        if($giltigtId -> getStatus() === 200){
+            $giltigtId = $giltigtId -> getContent() -> id;
+        } else {
+            throw new Exception("Kunde inte skapa ny post för kontroll");
+        }
+
+        $svar = raderaAktivitet($giltigtId);
+        if($svar -> getStatus() === 200 && $svar -> getContent() -> result === true){
+            $retur .= "<p class='ok'>Radera aktivitet lyckades</p>";
+        } else {
+            $retur .= "<p class='error'>Radera aktivitet misslyckades.<br>" .  $svar -> getStatus() . " och ". var_export($svar -> getContent() -> result, true) . " istället för förväntad 200 och false</p>";
+        }
+        $db -> rollBack();
+
+        //Testa radera som inte finns
+
+        $svar = raderaAktivitet($giltigtId);
+        if($svar -> getStatus() === 200 && $svar -> getContent() -> result === false){
+            $retur .= "<p class='ok'>Radera aktivitet som inte finns misslyckades, som förväntat</p>";
+        } else {
+            $retur .= "<p class='error'>Radera aktivitet lyckades.<br>" .  $svar -> getStatus() . " och ". var_export($svar -> getContent() -> result, true) . " istället för förväntad 200 och false</p>";
+        }
+
     } catch (Exception $ex) {
         $retur .= "<p class='error'>Något gick fel, meddelandet säger:<br> {$ex->getMessage()}</p>";
     }
-
+    
     return $retur;
 }
