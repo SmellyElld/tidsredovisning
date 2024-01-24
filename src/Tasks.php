@@ -54,8 +54,63 @@ function tasks(Route $route, array $postData): Response {
  * @param string $sida
  * @return Response
  */
-function hamtaSida(string $sida): Response {
+function hamtaSida(string $sida, int $posterPerSida = 10): Response {
+
+    //Kontrollera indata
+    $sidnummer = filter_var($sida, FILTER_VALIDATE_INT);
+
+    if($sidnummer === false || $sidnummer < 1){
+        $retur = new stdClass();
+        $retur -> error = ["Bad request", "Felaktigt angivet sidnummer"];
+        return new Response($retur, 400);
+    }
+
+    //Koppla databasen
+    $db = connectDb();
+
+    //Hämta poster
+    $stmt = $db -> query("SELECT COUNT(*) FROM uppgifter");
+    $antalPoster = $stmt -> fetchColumn();
+    if(!$antalPoster){
+        $retur = new stdClass();
+        $retur -> error = ["Inga poster kunde hittas"];
+        return new Response($retur, 400);
+    }
+
+    $antalSidor = ceil($antalPoster / $posterPerSida);
+    if($sidnummer > $antalSidor){
+        $retur = new stdClass();
+        $retur -> error = ["Bad request", "Felaktigt sidnummer", "Det finns endast $antalSidor sidor"];
+        return new Response($retur, 400); 
+    }
+
+    $forstaPost = ($sidnummer - 1) * $posterPerSida;
+    $stmt = $db -> query(
+        "SELECT u.id, u.datum, u.tid, u.beskrivning, u.aktivitetId, a.namn 
+        FROM uppgifter u
+        INNER JOIN aktiviteter a on aktivitetId = a.id
+        ORDER BY datum DESC
+        LIMIT $forstaPost, $posterPerSida");
+    $result = $stmt -> fetchALL();
     
+    $uppgifter = [];
+    foreach($result as $row){
+        $rad = new stdClass();
+        $rad -> id = $row["id"];
+        $rad -> activityId = $row["aktivitetId"];
+        $rad -> date = $row["datum"];
+        $tid  = new DateTime($row["tid"]);
+        $rad -> time = $tid -> format("H:i");
+        $rad -> activity = $row["namn"];
+        $rad -> description = $row["beskrivning"];
+        $uppgifter[] = $rad;
+    }
+    //Returnera svar
+    $retur = new stdClass();
+    $retur -> pages = $antalSidor;
+    $retur -> tasks = $uppgifter;
+
+    return new Response($retur);
 }
 
 /**
@@ -65,7 +120,64 @@ function hamtaSida(string $sida): Response {
  * @return Response
  */
 function hamtaDatum(string $from, string $tom): Response {
+    //Kontrollera indata
+    $fromDate = DateTimeImmutable::createFromFormat("Y-m-d", $from);
+    $tomDate = DateTimeImmutable::createFromFormat("Y-m-d", $tom);
+    $datumFel = [];
+
+    if($fromDate === false){
+        $datumFel[] = "Ogiltigt från-datum";
+    }
+    if($tomDate === false){
+        $datumFel[] = "Ogiltigt till-datum";
+    }
+    if($fromDate && $fromDate -> format("Y-m-d") !== $from){
+        $datumFel[] = "Ogiltigt angivet från-datum";
+    }
+    if($tomDate && $tomDate -> format("Y-m-d") !== $tom){
+        $datumFel[] = "Ogiltigt angivet till-datum";
+    }
+    if($fromDate && $tomDate && $fromDate -> format("Y-m-d") > $tomDate -> format("Y-m-d")){
+        $datumFel[] = "Från-datum får inte vara större än till-datum";
+    }
+
+    if(count($datumFel) > 0){
+        $retur = new stdClass();
+        $retur -> error = $datumFel;
+        array_unshift($retur -> error, "Bad request");
+        return new Response($retur, 400);
+    }
+
+    //Koppla databas
+    $db = connectDb();
     
+    //Exekvera sql
+    $stmt = $db -> prepare(
+        "SELECT u.id, u.datum, u.tid, u.beskrivning, u.aktivitetId, a.namn 
+        FROM uppgifter u
+        INNER JOIN aktiviteter a on aktivitetId = a.id
+        WHERE datum BETWEEN :from AND :to
+        ORDER BY datum");
+    $stmt -> execute(["from" => $fromDate -> format("Y-m-d"), "to" => $tomDate -> format("Y-m-d")]);
+    $result = $stmt -> fetchALL();
+
+    $uppgifter = [];
+    foreach($result as $row){
+        $rad = new stdClass();
+        $rad -> id = $row["id"];
+        $rad -> activityId = $row["aktivitetId"];
+        $rad -> date = $row["datum"];
+        $tid  = new DateTime($row["tid"]);
+        $rad -> time = $tid -> format("H:i");
+        $rad -> activity = $row["namn"];
+        $rad -> description = $row["beskrivning"];
+        $uppgifter[] = $rad;
+    }
+
+    //Returnera svar
+    $retur = new stdClass();
+    $retur -> tasks = $uppgifter;
+    return new Response($retur);
 }
 
 /**

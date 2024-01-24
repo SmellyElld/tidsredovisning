@@ -25,7 +25,56 @@ function allaTaskTester(): string {
 function test_HamtaUppgifterSida(): string {
     $retur = "<h2>test_HamtaUppgifterSida</h2>";
     try {
-        $retur .= "<p class='error'>Inga tester implementerade</p>";
+        //Misslyckas hämta sida
+        $svar = hamtaSida("-1");
+        if($svar -> getStatus() === 400){
+            $retur .= "<p class='ok'>Misslyckas med att hämta sida -1 som förväntat</p>";
+        }else{
+            $retur .= "<p class='error'>Lyckas med att hämta sida -1<br>"
+                    .$svar -> getStatus() . " returnerades istället för förväntat 400</p>";
+        }
+
+        //Misslyckas med att hämta sida o
+        $svar = hamtaSida("0");
+        if($svar -> getStatus() === 400){
+            $retur .= "<p class='ok'>Misslyckas med att hämta sida 0 som förväntat</p>";
+        }else{
+            $retur .= "<p class='error'>Lyckas med att hämta sida 0<br>"
+                    .$svar -> getStatus() . " returnerades istället för förväntat 400</p>";
+        }
+        
+        //Misslyckas med att hämta sida sju
+        $svar = hamtaSida("sju");
+        if($svar -> getStatus() === 400){
+            $retur .= "<p class='ok'>Misslyckas med att hämta sida sju som förväntat</p>";
+        }else{
+            $retur .= "<p class='error'>Lyckas med att hämta sida sju<br>"
+                    .$svar -> getStatus() . " returnerades istället för förväntat 400</p>";
+        }
+
+        //Lyckas hämta sida 1
+        $svar = hamtaSida("1");
+        if($svar -> getStatus() === 200){
+            $retur .= "<p class='ok'>Lyckas hämta sida 1</p>";
+            $ogiltigSida = ($svar -> getContent() -> pages) + 1;
+        }else{
+            $retur .= "<p class='error'>Misslyckas med att hämta sida 1<br>"
+                    .$svar -> getStatus() . " returnerades istället för förväntat 400</p>";
+        }
+
+        //Misslyckas med att hämta sida > antal sidor
+        if(isset($ogiltigSida)){
+            $svar = hamtaSida((string) $ogiltigSida);
+            if($svar -> getStatus() === 400){
+                $retur .= "<p class='ok'>Misslyckas med att hämta sida som inte finns som förväntat</p>";
+            }else{
+                $retur .= "<p class='error'>Lyckas med att hämta sida som inte finns<br>"
+                        .$svar -> getStatus() . " returnerades istället för förväntat 400</p>";
+            }
+        } else {
+            $retur .= "<p class='error'>Kunde inte utföra testet 'misslyckas med att hämta en sida som inte finns'</p>";
+        }
+
     } catch (Exception $ex) {
         $retur .= "<p class='error'>Något gick fel, meddelandet säger:<br> {$ex->getMessage()}</p>";
     }
@@ -39,8 +88,78 @@ function test_HamtaUppgifterSida(): string {
  */
 function test_HamtaAllaUppgifterDatum(): string {
     $retur = "<h2>test_HamtaAllaUppgifterDatum</h2>";
+
     try {
-        $retur .= "<p class='error'>Inga tester implementerade</p>";
+        //Misslyckas med från = igår, till = 2024-01-01
+        $svar = hamtaDatum("igår", "2024-01-01");
+        if($svar -> getStatus() === 400) {
+            $retur .= "<p class='ok'>Misslyckades med att hämta poster mellan <i>igår</i> och 2024-01-01</p>";
+        }else{
+            $retur .= "<p class='error'>Misslyckat test med att hämta poster mellan <i>igår</i> och 2024-01-01<br>"
+                . $svar -> getStatus() .  " returnerades istället för 400</p>";
+        }
+
+        //Misslyckas med från = 2024-01-01, till = i morgon
+        $svar = hamtaDatum("2024-01-01","i morgon");
+        if($svar -> getStatus() === 400) {
+            $retur .= "<p class='ok'>Misslyckades med att hämta poster mellan 2024-01-01 och <i>i morgon</i></p>";
+        }else{
+            $retur .= "<p class='error'>Misslyckat test med att hämta poster mellan 2024-01-01 och <i>i morgon</i><br>"
+                . $svar -> getStatus() .  " returnerades istället för 400</p>";
+        }
+        
+        //Misslyckas med från = 2023-12-37, till = 2024-01-01
+        $svar = hamtaDatum("2023-12-37","2024-01-01");
+        if($svar -> getStatus() === 400) {
+            $retur .= "<p class='ok'>Misslyckades med att hämta poster mellan 2023-12-37 och 2024-01-01</p>";
+        }else{
+            $retur .= "<p class='error'>Misslyckat test med att hämta poster mellan 2023-12-37 och 2024-01-01<br>"
+                . $svar -> getStatus() .  " returnerades istället för 400</p>";
+        }
+        
+        //Misslyckas med från = 2024-01-01, till = 2024-01-37
+        $svar = hamtaDatum("2023-01-01","2024-01-37");
+        if($svar -> getStatus() === 400) {
+            $retur .= "<p class='ok'>Misslyckades med att hämta poster mellan 2024-01-01 och 2024-01-37</p>";
+        }else{
+            $retur .= "<p class='error'>Misslyckat test med att hämta poster mellan 2024-01-01 och 2024-01-37<br>"
+                . $svar -> getStatus() .  " returnerades istället för 400</p>";
+        }
+         
+        //Misslyckas med från = 2024-01-01, till = 2023-01-01
+        $svar = hamtaDatum("2024-01-01","2023-01-01");
+        if($svar -> getStatus() === 400) {
+            $retur .= "<p class='ok'>Misslyckades med att hämta poster mellan 2024-01-01 och 2023-01-01</p>";
+        }else{
+            $retur .= "<p class='error'>Misslyckat test med att hämta poster mellan 2024-01-01 och 2023-01-01<br>"
+                . $svar -> getStatus() .  " returnerades istället för 400</p>";
+        }
+
+        //Lyckas med korrekt datum
+        //Leta upp en månad med poster
+        $db = connectDb();
+        $stmt = $db -> query(
+            "SELECT YEAR(datum), MONTH(datum), COUNT(*) AS antal
+            FROM uppgifter
+            GROUP BY YEAR(datum), MONTH(datum)
+            ORDER BY antal DESC
+            LIMIT 0, 1");
+        $row = $stmt -> fetch();
+        
+        $ar = $row[0];
+        $manad = $row[1];
+        $antal = $row[2];
+
+        //Hämta alla poster från den funna månaden
+        $svar = hamtaDatum(date("Y-m-d", strtotime("$ar-$manad-01")), date("Y-m-d", strtotime("Last day of $ar-$manad")));
+        if($svar -> getStatus() === 200 && count($svar -> getContent() -> tasks) === $antal){
+            $retur .= "<p class='ok'>Lyckades hämta $antal poster för månad $ar-$manad</p>";
+        }else{
+            $retur .= "<p class='error'>Misslyckades med att hämta poster för $ar-$manad<br>"
+                . $svar -> getStatus() .  " returnerades istället för 200<br>"
+                . print_r($svar -> getContent(), true) . "</p>";
+        }
+
     } catch (Exception $ex) {
         $retur .= "<p class='error'>Något gick fel, meddelandet säger:<br> {$ex->getMessage()}</p>";
     }
