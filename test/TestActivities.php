@@ -28,7 +28,7 @@ function test_HamtaAllaAktiviteter(): string {
     try {
         $svar = hamtaAllaAktiviteter();
         if($svar -> getStatus() === 200){
-            $retur .= "<p class='ok'>Hämta alla aktiviteter lyckades " . count($svar -> getContent())
+            $retur .= "<p class='ok'>Hämta alla aktiviteter lyckades " . count($svar -> getContent() -> activities)
             . " poster returnerades</p>";
         }else{
 

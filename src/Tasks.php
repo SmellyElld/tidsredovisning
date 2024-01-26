@@ -157,7 +157,7 @@ function hamtaDatum(string $from, string $tom): Response {
         FROM uppgifter u
         INNER JOIN aktiviteter a on aktivitetId = a.id
         WHERE datum BETWEEN :from AND :to
-        ORDER BY datum");
+        ORDER BY datum DESC");
     $stmt -> execute(["from" => $fromDate -> format("Y-m-d"), "to" => $tomDate -> format("Y-m-d")]);
     $result = $stmt -> fetchALL();
 

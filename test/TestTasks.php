@@ -191,9 +191,58 @@ function test_SparaUppgift(): string {
     $retur = "<h2>test_SparaUppgift</h2>";
 
     try {
-        $retur .= "<p class='error'>Inga tester implementerade</p>";
+        $db = connectDb();
+        //Skapa transaktion så att vi slipper skräp i databsen
+        $db -> beginTransaction();
+
+        //Misslyckas med att spara pga saknad aktivitetId
+        $postdata = ["time" => "01:00", "date" => "2024-01-26", "description" => "Test"];
+        
+        $svar = sparaNyUppgift($postdata);
+        if($svar -> getStatus() === 400){
+            $retur .= "<p class='ok'>Misslyckades med att spara post utan aktivitetid, som förväntat</p>";
+        }else{
+            $retur .= "<p class='error'>Misslyckades med att spara post utan aktivitetid<br>"
+            . $svar -> getStatus() .  " returnerades istället för 400"
+            . print_r($svar -> getContent(), true) . "</p>";
+        }
+        
+        //Lyckas med att spara post utan beskrivning
+        //Förbered data
+        $aktiviteter = hamtaAllaAktiviteter() -> getContent();
+        $aktivitetId = $aktiviteter -> activities[0] -> id;
+        $postdata = ["time" => "01:00", "date" => "2024-01-26", "activityId" => "$aktivitetId"];
+        
+        //Testa
+        $svar = sparaNyUppgift($postdata);
+        if($svar -> getStatus() === 200){
+            $retur .= "<p class='ok'>Lyckades med att spara post utan beskrivning</p>";
+        }else{
+            $retur .= "<p class='error'>Misslyckades med att spara post utan beskrivning<br>"
+            . $svar -> getStatus() .  " returnerades istället för 200 "
+            . print_r($svar -> getContent(), true) . "</p>";
+        }
+
+
+        //Lyckas spara post med alla uppgifter
+        $postdata = ["time" => "01:00", "date" => "2024-01-26", "activityId" => "$aktivitetId", "description" => "En beskrivning"];
+        $svar = sparaNyUppgift($postdata);
+        if($svar -> getStatus() === 200){
+            $retur .= "<p class='ok'>Lyckades med att spara post</p>";
+        }else{
+            $retur .= "<p class='error'>Misslyckades med att spara<br>"
+            . $svar -> getStatus() .  " returnerades istället för 200 "
+            . print_r($svar -> getContent(), true) . "</p>";
+        }
+
+
+
     } catch (Exception $ex) {
         $retur .= "<p class='error'>Något gick fel, meddelandet säger:<br> {$ex->getMessage()}</p>";
+    } finally {
+        if($db){
+            $db -> rollBack();
+        }
     }
 
     return $retur;

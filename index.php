@@ -1,5 +1,7 @@
 <?php
 
+header("Access-Control-Allow-Origin: *");
+
 require_once './src/routes.php';
 require_once './src/funktioner.php';
 require_once './src/Route.php';

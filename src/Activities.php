@@ -43,15 +43,16 @@ function hamtaAllaAktiviteter(): Response {
     $db = connectDb();
 
     // hämta alla aktiviteter
-    $result = $db -> query("SELECT id, namn FROM aktiviteter");
+    $result = $db -> query("SELECT id, namn FROM aktiviteter ORDER BY id DESC");
 
     // skapa returvärde
-    $retur = [];
+    $retur = new stdClass();
+    $retur -> activities = [];
     foreach($result as $item){
         $post = new stdClass();
         $post -> id = $item["id"];
-        $post -> namn = $item["namn"];
-        $retur[] = $post;
+        $post -> activity = $item["namn"];
+        $retur -> activities[] = $post;
     }
 
     // skicka svar
@@ -78,7 +79,7 @@ function hamtaEnskildAktivitet(string $id): Response {
 
     //Skicka fråga
     $stmt = $db -> prepare("SELECT id, namn FROM aktiviteter WHERE id = :id");
-    $result = $stmt -> execute(["id" => $kontrolleratId]);
+    $stmt -> execute(["id" => $kontrolleratId]);
     
     //Kontrollera svar
     if($row = $stmt -> fetch(PDO::FETCH_ASSOC)) {
