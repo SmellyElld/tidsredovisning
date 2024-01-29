@@ -116,7 +116,9 @@ function test_HamtaEnAktivitet(): string {
         $retur .= "<p class='error'>Något gick fel, meddelandet säger:<br> {$ex->getMessage()}</p>";
     } finally{
         //Återställ databasen
-        $db -> rollBack();
+        if(isset($db)){
+            $db -> rollBack();
+        }
     }
 
     return $retur;
@@ -168,7 +170,7 @@ function test_SparaNyAktivitet(): string {
         $retur .= "<p class='error'>Något gick fel, meddelandet säger:<br> {$ex->getMessage()}</p>";
     } finally {
         //Återställ databasen
-        if($db) {
+        if(isset($db)) {
             $db -> rollBack();
         }
     }
@@ -274,7 +276,7 @@ function test_UppdateraAktivitet(): string {
         $retur .= "<p class='error'>Något gick fel, meddelandet säger:<br> {$ex->getMessage()}</p>";
     } finally {
         //Återställ databasen
-        if($db) {
+        if(isset($db)) {
             $db -> rollBack();
         }
     }
