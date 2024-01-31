@@ -475,9 +475,9 @@ function test_KontrolleraIndata(): string {
         $postdata = ["date" => "I förgår"];
         $svar = kontrolleraIndata($postdata);
         if(in_array("Ogiltigt angivet datum", $svar)){
-            $retur .= "<p class='ok'>Returnerade 'ogiltigt angivet datum', som förväntat</p>";
+            $retur .= "<p class='ok'>Returnerade 'ogiltigt angivet datum' (I förgår), som förväntat</p>";
         }else{
-            $retur .= "<p class='error'>Returnerade inte 'ogiltigt angivet datum' <br>"
+            $retur .= "<p class='error'>Returnerade inte 'ogiltigt angivet datum' (I förgår)<br>"
             . print_r($svar, true) . " Returnerades istället</p>";
         }
 
@@ -485,9 +485,9 @@ function test_KontrolleraIndata(): string {
         $postdata = ["date" => "2024-01-37"];
         $svar = kontrolleraIndata($postdata);
         if(in_array("Felaktig formaterat datum", $svar)){
-            $retur .= "<p class='ok'>Returnerade 'Felaktig formaterat datum', som förväntat</p>";
+            $retur .= "<p class='ok'>Returnerade 'Felaktig formaterat datum' (2024-01-37), som förväntat</p>";
         }else{
-            $retur .= "<p class='error'>Returnerade inte 'Felaktig formaterat datum' <br>"
+            $retur .= "<p class='error'>Returnerade inte 'Felaktig formaterat datum' (2024-01-37)<br>"
             . print_r($svar, true) . " Returnerades istället</p>";
         }
 
@@ -509,9 +509,9 @@ function test_KontrolleraIndata(): string {
 
         $svar = kontrolleraIndata($postdata);
         if(in_array("Ogiltigt angiven tid", $svar)){
-            $retur .= "<p class='ok'>Returnerade 'Ogiltigt angiven tid', som förväntat</p>";
+            $retur .= "<p class='ok'>Returnerade 'Ogiltigt angiven tid' (hej) , som förväntat</p>";
         }else{
-            $retur .= "<p class='error'>Returnerade inte 'Ogiltigt angiven tid' <br>"
+            $retur .= "<p class='error'>Returnerade inte 'Ogiltigt angiven tid' (hej) <br>"
             . print_r($svar, true) . " Returnerades istället</p>";
         }
 
@@ -520,9 +520,9 @@ function test_KontrolleraIndata(): string {
 
         $svar = kontrolleraIndata($postdata);
         if(in_array("Felaktigt angiven tid", $svar)){
-            $retur .= "<p class='ok'>Returnerade 'Felaktigt angiven tid', som förväntat</p>";
+            $retur .= "<p class='ok'>Returnerade 'Felaktigt angiven tid' (05:70), som förväntat</p>";
         }else{
-            $retur .= "<p class='error'>Returnerade inte 'Felaktigt angiven tid' <br>"
+            $retur .= "<p class='error'>Returnerade inte 'Felaktigt angiven tid' (05:70)<br>"
             . print_r($svar, true) . " Returnerades istället</p>";
         }
 
@@ -531,9 +531,9 @@ function test_KontrolleraIndata(): string {
 
         $svar = kontrolleraIndata($postdata);
         if(in_array("Du får inte rapportera mer än 8 timmar per aktivitet år gången", $svar)){
-            $retur .= "<p class='ok'>Returnerade 'Du får inte rapportera mer än 8 timmar per aktivitet år gången', som förväntat</p>";
+            $retur .= "<p class='ok'>Returnerade 'Du får inte rapportera mer än 8 timmar per aktivitet år gången', (08:01) som förväntat</p>";
         }else{
-            $retur .= "<p class='error'>Returnerade inte 'Du får inte rapportera mer än 8 timmar per aktivitet år gången' <br>"
+            $retur .= "<p class='error'>Returnerade inte 'Du får inte rapportera mer än 8 timmar per aktivitet år gången' (08:01)<br>"
             . print_r($svar, true) . " Returnerades istället</p>";
         }
 
