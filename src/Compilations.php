@@ -74,7 +74,7 @@ function hamtaSammanstallning(string $from, string $tom): Response {
     while($row = $stmt -> fetch()){
         $rad = new stdClass();
         $rad -> activityId = $row["aktivitetid"];
-        $rad -> tid = substr($row["tid"], 0, -3);
+        $rad -> time = substr($row["tid"], 0, -3);
         $rad -> activity = $row["aktivitet"];
         $poster[] = $rad;
     }
